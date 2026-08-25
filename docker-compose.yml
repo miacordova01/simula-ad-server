@@ -1,0 +1,75 @@
+name: simula-ad-server
+
+services:
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: [mongo_data:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Local Temporal dev server (in-memory). Temporal Cloud is used in the
+  # deployed environment; see README.
+  temporal:
+    image: temporalio/temporal:latest
+    # This image's ENTRYPOINT is `tini -- sleep infinity`, so the server command
+    # must replace the entrypoint rather than be appended to it.
+    entrypoint: ["temporal"]
+    command: ["server", "start-dev", "--ip", "0.0.0.0", "--namespace", "default", "--log-level", "warn"]
+    ports: ["7233:7233", "8233:8233"]
+    healthcheck:
+      test: ["CMD", "temporal", "workflow", "list", "--address", "127.0.0.1:7233"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build: .
+    ports: ["8080:8080"]
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379/0
+      TEMPORAL_TARGET: temporal:7233
+      API_URL: ${API_URL:-http://localhost:8080}
+      API_KEY: ${API_KEY:-dev-key}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-opus-5}
+      ENVIRONMENT: docker
+      LOG_LEVEL: INFO
+    depends_on:
+      mongo: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  worker:
+    build: .
+    command: ["python", "-m", "app.temporal_jobs.worker"]
+    # The image's HEALTHCHECK probes an HTTP port; the worker is a Temporal
+    # poller with no HTTP server, so it would report unhealthy forever.
+    # Liveness for the worker is its task-queue poll, visible in Temporal.
+    healthcheck:
+      disable: true
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379/0
+      TEMPORAL_TARGET: temporal:7233
+      SEED_ON_STARTUP: "false"
+      ENVIRONMENT: docker
+    depends_on:
+      mongo: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      temporal: {condition: service_healthy}
+
+volumes:
+  mongo_data:

@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.env
+samples/
+RESUME.md
+TALKING_POINTS.md
+FILMING_GUIDE.md
+_rendered/

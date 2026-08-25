@@ -1,0 +1,1777 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Simula Native Ad Server",
+        "description": "Campaign/ad-set management, session resolution and native ad serving with geo + OS targeting, bandit ranking and LLM ad copy.",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/healthz": {
+            "get": {
+                "tags": [
+                    "ops"
+                ],
+                "summary": "Healthz",
+                "description": "Liveness -- is the process up. No dependencies touched.",
+                "operationId": "healthz_healthz_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    },
+                                    "type": "object",
+                                    "title": "Response Healthz Healthz Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/readyz": {
+            "get": {
+                "tags": [
+                    "ops"
+                ],
+                "summary": "Readyz",
+                "description": "Readiness -- can we actually serve. Checks Mongo and Redis.\n\nSplit from liveness on purpose: a Redis blip should stop traffic being\nrouted here, but must not get the container killed and restarted.",
+                "operationId": "readyz_readyz_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response Readyz Readyz Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/campaigns": {
+            "post": {
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Create Campaign",
+                "operationId": "create_campaign_campaigns_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CampaignCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Campaign"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "List Campaigns",
+                "operationId": "list_campaigns_campaigns_get",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "comma-separated campaign ids",
+                            "title": "Ids"
+                        },
+                        "description": "comma-separated campaign ids"
+                    },
+                    {
+                        "name": "surface",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Surface"
+                        }
+                    },
+                    {
+                        "name": "publisher_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Publisher Id"
+                        }
+                    },
+                    {
+                        "name": "active",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Active"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 500,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Offset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Campaign"
+                                    },
+                                    "title": "Response List Campaigns Campaigns Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/campaigns/{campaign_id}": {
+            "get": {
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Get Campaign",
+                "operationId": "get_campaign_campaigns__campaign_id__get",
+                "parameters": [
+                    {
+                        "name": "campaign_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Campaign Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Campaign"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Update Campaign",
+                "operationId": "update_campaign_campaigns__campaign_id__patch",
+                "parameters": [
+                    {
+                        "name": "campaign_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Campaign Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CampaignUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Campaign"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "campaigns"
+                ],
+                "summary": "Delete Campaign",
+                "operationId": "delete_campaign_campaigns__campaign_id__delete",
+                "parameters": [
+                    {
+                        "name": "campaign_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Campaign Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/adsets": {
+            "post": {
+                "tags": [
+                    "adsets"
+                ],
+                "summary": "Create Ad Set",
+                "operationId": "create_ad_set_adsets_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdSetCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdSetCreateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "adsets"
+                ],
+                "summary": "List Ad Sets",
+                "operationId": "list_ad_sets_adsets_get",
+                "parameters": [
+                    {
+                        "name": "campaign_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Campaign Id"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AdSet"
+                                    },
+                                    "title": "Response List Ad Sets Adsets Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/adsets/{ad_set_id}": {
+            "get": {
+                "tags": [
+                    "adsets"
+                ],
+                "summary": "Get Ad Set",
+                "operationId": "get_ad_set_adsets__ad_set_id__get",
+                "parameters": [
+                    {
+                        "name": "ad_set_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Ad Set Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdSet"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/adsets/{ad_set_id}/variants": {
+            "get": {
+                "tags": [
+                    "adsets"
+                ],
+                "summary": "List Variants",
+                "operationId": "list_variants_adsets__ad_set_id__variants_get",
+                "parameters": [
+                    {
+                        "name": "ad_set_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Ad Set Id"
+                        }
+                    },
+                    {
+                        "name": "active",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Active"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AdVariant"
+                                    },
+                                    "title": "Response List Variants Adsets  Ad Set Id  Variants Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/session/create": {
+            "post": {
+                "tags": [
+                    "sessions"
+                ],
+                "summary": "Create Session",
+                "description": "Resolve the caller to a stable user and return their session id.\n\nResolve-or-create: within the inactivity window the same caller gets the\nsame `session_id` back, which is what makes the 30s rule observable.",
+                "operationId": "create_session_session_create_post",
+                "parameters": [
+                    {
+                        "name": "X-Forwarded-For",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "X-Forwarded-For"
+                        }
+                    },
+                    {
+                        "name": "X-Real-IP",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "X-Real-Ip"
+                        }
+                    },
+                    {
+                        "name": "User-Agent",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "User-Agent"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SessionCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionCreateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/session/{session_id}": {
+            "get": {
+                "tags": [
+                    "sessions",
+                    "sessions"
+                ],
+                "summary": "Get Session",
+                "description": "Inspect a session. Useful for debugging and for the demo script.",
+                "operationId": "get_session_session__session_id__get",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Session"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/load/native": {
+            "post": {
+                "tags": [
+                    "serving"
+                ],
+                "summary": "Load Native",
+                "description": "Serve a native sponsored-character ad for a feed slot.",
+                "operationId": "load_native_load_native_post",
+                "parameters": [
+                    {
+                        "name": "theme",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(dark|light)$",
+                            "default": "dark",
+                            "title": "Theme"
+                        }
+                    },
+                    {
+                        "name": "X-Forwarded-For",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "X-Forwarded-For"
+                        }
+                    },
+                    {
+                        "name": "X-Real-IP",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "X-Real-Ip"
+                        }
+                    },
+                    {
+                        "name": "User-Agent",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "User-Agent"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NativeAdRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NativeAdResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/impressions/{impression_id}/click": {
+            "post": {
+                "tags": [
+                    "serving"
+                ],
+                "summary": "Record Click",
+                "description": "Click callback fired by the rendered creative.\n\nThe template calls this endpoint directly, so it exists even though the\nbrief does not list it. Returns 202 on an unknown or already-counted id\nrather than 404: click pixels are fire-and-forget and retried by the\nbrowser, and a duplicate must never look like a failure the client should\nretry harder.",
+                "operationId": "record_click_impressions__impression_id__click_post",
+                "parameters": [
+                    {
+                        "name": "impression_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Impression Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response Record Click Impressions  Impression Id  Click Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AdContext": {
+                "properties": {
+                    "searchTerm": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Searchterm"
+                    },
+                    "tags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Tags"
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category"
+                    },
+                    "title": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Title"
+                    },
+                    "nsfw": {
+                        "type": "boolean",
+                        "title": "Nsfw",
+                        "default": false
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "AdContext",
+                "description": "Relevance signals supplied by the caller."
+            },
+            "AdSet": {
+                "properties": {
+                    "ad_set_id": {
+                        "type": "string",
+                        "title": "Ad Set Id"
+                    },
+                    "campaign_id": {
+                        "type": "string",
+                        "title": "Campaign Id"
+                    },
+                    "ad_set_name": {
+                        "type": "string",
+                        "title": "Ad Set Name"
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "title": "Active",
+                        "default": true
+                    },
+                    "character_names": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Character Names"
+                    },
+                    "video_urls": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Video Urls"
+                    },
+                    "ctas": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Ctas"
+                    },
+                    "ai_prompts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Ai Prompts"
+                    },
+                    "fallback_copy": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Fallback Copy"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "campaign_id",
+                    "ad_set_name"
+                ],
+                "title": "AdSet"
+            },
+            "AdSetCreate": {
+                "properties": {
+                    "campaign_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "title": "Campaign Id"
+                    },
+                    "ad_set_name": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "title": "Ad Set Name"
+                    },
+                    "character_names": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "minItems": 1,
+                        "title": "Character Names"
+                    },
+                    "video_urls": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "minItems": 1,
+                        "title": "Video Urls"
+                    },
+                    "ctas": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "minItems": 1,
+                        "title": "Ctas"
+                    },
+                    "ai_prompts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "minItems": 1,
+                        "title": "Ai Prompts"
+                    },
+                    "fallback_copy": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Fallback Copy"
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "title": "Active",
+                        "default": true
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "campaign_id",
+                    "ad_set_name",
+                    "character_names",
+                    "video_urls",
+                    "ctas",
+                    "ai_prompts"
+                ],
+                "title": "AdSetCreate"
+            },
+            "AdSetCreateResponse": {
+                "properties": {
+                    "ad_set": {
+                        "$ref": "#/components/schemas/AdSet"
+                    },
+                    "variants": {
+                        "items": {
+                            "$ref": "#/components/schemas/AdVariant"
+                        },
+                        "type": "array",
+                        "title": "Variants"
+                    },
+                    "variant_count": {
+                        "type": "integer",
+                        "title": "Variant Count"
+                    },
+                    "campaign_linked": {
+                        "type": "boolean",
+                        "title": "Campaign Linked"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "ad_set",
+                    "variants",
+                    "variant_count",
+                    "campaign_linked"
+                ],
+                "title": "AdSetCreateResponse"
+            },
+            "AdVariant": {
+                "properties": {
+                    "variant_id": {
+                        "type": "string",
+                        "title": "Variant Id"
+                    },
+                    "ad_set_id": {
+                        "type": "string",
+                        "title": "Ad Set Id"
+                    },
+                    "campaign_id": {
+                        "type": "string",
+                        "title": "Campaign Id"
+                    },
+                    "character_name": {
+                        "type": "string",
+                        "title": "Character Name"
+                    },
+                    "video_url": {
+                        "type": "string",
+                        "title": "Video Url"
+                    },
+                    "cta": {
+                        "type": "string",
+                        "title": "Cta"
+                    },
+                    "ai_prompt": {
+                        "type": "string",
+                        "title": "Ai Prompt"
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "title": "Active",
+                        "default": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "ad_set_id",
+                    "campaign_id",
+                    "character_name",
+                    "video_url",
+                    "cta",
+                    "ai_prompt"
+                ],
+                "title": "AdVariant"
+            },
+            "Campaign": {
+                "properties": {
+                    "campaign_id": {
+                        "type": "string",
+                        "title": "Campaign Id"
+                    },
+                    "campaign_name": {
+                        "type": "string",
+                        "title": "Campaign Name"
+                    },
+                    "advertiser_company_id": {
+                        "type": "string",
+                        "title": "Advertiser Company Id"
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "title": "Active",
+                        "default": false
+                    },
+                    "daily_budget": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Daily Budget"
+                    },
+                    "geo_targets": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Geo Targets"
+                    },
+                    "os_targets": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Os Targets"
+                    },
+                    "attribution_provider": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Attribution Provider"
+                    },
+                    "ios_store_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ios Store Url"
+                    },
+                    "android_store_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Android Store Url"
+                    },
+                    "native_ad_set_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Native Ad Set Ids"
+                    },
+                    "surface": {
+                        "type": "string",
+                        "title": "Surface",
+                        "default": "native"
+                    },
+                    "publisher_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Publisher Id"
+                    },
+                    "impression_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Impression Url"
+                    },
+                    "downloads_label": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Downloads Label"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "campaign_name",
+                    "advertiser_company_id"
+                ],
+                "title": "Campaign"
+            },
+            "CampaignCreate": {
+                "properties": {
+                    "campaign_name": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "title": "Campaign Name"
+                    },
+                    "advertiser_company_id": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Advertiser Company Id"
+                    },
+                    "daily_budget": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Daily Budget"
+                    },
+                    "geo_targets": {
+                        "items": {
+                            "type": "string",
+                            "maxLength": 2,
+                            "minLength": 2,
+                            "pattern": "^[A-Za-z]{2}$"
+                        },
+                        "type": "array",
+                        "title": "Geo Targets"
+                    },
+                    "os_targets": {
+                        "items": {
+                            "$ref": "#/components/schemas/OS"
+                        },
+                        "type": "array",
+                        "title": "Os Targets"
+                    },
+                    "attribution_provider": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Attribution Provider"
+                    },
+                    "ios_store_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 2083,
+                                "minLength": 1,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ios Store Url"
+                    },
+                    "android_store_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 2083,
+                                "minLength": 1,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Android Store Url"
+                    },
+                    "native_ad_set_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Native Ad Set Ids"
+                    },
+                    "surface": {
+                        "$ref": "#/components/schemas/Surface",
+                        "default": "native"
+                    },
+                    "publisher_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Publisher Id"
+                    },
+                    "impression_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 2083,
+                                "minLength": 1,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Impression Url"
+                    },
+                    "downloads_label": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Downloads Label"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "campaign_name",
+                    "advertiser_company_id"
+                ],
+                "title": "CampaignCreate"
+            },
+            "CampaignUpdate": {
+                "properties": {
+                    "campaign_name": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 200,
+                                "minLength": 1
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Campaign Name"
+                    },
+                    "advertiser_company_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Advertiser Company Id"
+                    },
+                    "daily_budget": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Daily Budget"
+                    },
+                    "geo_targets": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string",
+                                    "maxLength": 2,
+                                    "minLength": 2,
+                                    "pattern": "^[A-Za-z]{2}$"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Geo Targets"
+                    },
+                    "os_targets": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/OS"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Os Targets"
+                    },
+                    "attribution_provider": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Attribution Provider"
+                    },
+                    "ios_store_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 2083,
+                                "minLength": 1,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ios Store Url"
+                    },
+                    "android_store_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 2083,
+                                "minLength": 1,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Android Store Url"
+                    },
+                    "native_ad_set_ids": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Native Ad Set Ids"
+                    },
+                    "surface": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Surface"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "publisher_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Publisher Id"
+                    },
+                    "impression_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 2083,
+                                "minLength": 1,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Impression Url"
+                    },
+                    "downloads_label": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Downloads Label"
+                    },
+                    "active": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Active"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "CampaignUpdate",
+                "description": "PATCH body. Every field optional; unset fields are left untouched.\n\n`active` IS settable here (the brief's own PATCH example toggles it) even\nthough it is API-owned on create."
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "NativeAdRequest": {
+                "properties": {
+                    "position": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "title": "Position",
+                        "description": "feed index of the slot"
+                    },
+                    "session_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "title": "Session Id"
+                    },
+                    "context": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AdContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "position",
+                    "session_id"
+                ],
+                "title": "NativeAdRequest"
+            },
+            "NativeAdResponse": {
+                "properties": {
+                    "impression_id": {
+                        "type": "string",
+                        "title": "Impression Id"
+                    },
+                    "rendered_html": {
+                        "type": "string",
+                        "title": "Rendered Html"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "impression_id",
+                    "rendered_html"
+                ],
+                "title": "NativeAdResponse"
+            },
+            "OS": {
+                "type": "string",
+                "enum": [
+                    "ios",
+                    "android",
+                    "web",
+                    "unknown"
+                ],
+                "title": "OS"
+            },
+            "Session": {
+                "properties": {
+                    "session_id": {
+                        "type": "string",
+                        "title": "Session Id"
+                    },
+                    "user_key": {
+                        "type": "string",
+                        "title": "User Key"
+                    },
+                    "resolved_from": {
+                        "type": "string",
+                        "title": "Resolved From"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "last_seen_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Last Seen At"
+                    },
+                    "serve_count": {
+                        "type": "integer",
+                        "title": "Serve Count",
+                        "default": 0
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "user_key",
+                    "resolved_from"
+                ],
+                "title": "Session"
+            },
+            "SessionCreateRequest": {
+                "properties": {
+                    "ppid": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 200
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ppid"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "SessionCreateRequest"
+            },
+            "SessionCreateResponse": {
+                "properties": {
+                    "session_id": {
+                        "type": "string",
+                        "title": "Session Id"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "session_id"
+                ],
+                "title": "SessionCreateResponse"
+            },
+            "Surface": {
+                "type": "string",
+                "enum": [
+                    "native"
+                ],
+                "title": "Surface"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}

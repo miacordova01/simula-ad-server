@@ -1,0 +1,13 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+motor==3.6.0
+pymongo==4.9.2
+redis==5.2.1
+maxminddb==2.6.2
+ua-parser==1.0.0
+anthropic==1.0.0
+temporalio==1.9.0
+httpx==0.28.1
+python-multipart==0.0.20
